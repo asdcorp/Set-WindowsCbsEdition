@@ -10,9 +10,11 @@ Set-WindowsCbsEdition.ps1 [-SetEdition Edition] [-GetTargetEditions] [-StageCurr
 ```
 
 Parameters explanation:
- * `SetEdition` - Set edition the the provided one
+ * `SetEdition` - Set edition to the provided one
  * `GetTargetEditions` - Get a list of target editions for the system
  * `StageCurrent` - Sets the script to stage the current edition instead of removing it
+
+After a successful edition switch the script will immediately reboot the machine.
 
 License
 -------
