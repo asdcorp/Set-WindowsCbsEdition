@@ -177,7 +177,7 @@ function Write-UpgradeXml {
 }
 
 function Write-Usage {
-    Get-Help $PSCommandPath -detailed
+    Get-Help $script:MyInvocation.MyCommand.Path -detailed
 }
 
 $version = '1.0'
