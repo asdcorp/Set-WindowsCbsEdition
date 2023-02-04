@@ -36,7 +36,6 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
     Sets the script to stage the current edition instead of removing it.
 #>
 
-#Requires -RunAsAdministrator
 
 param (
     [Parameter()]
@@ -48,6 +47,11 @@ param (
     [Parameter()]
     [Switch]$StageCurrent
 )
+
+if (-Not ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole] "Administrator")) {
+    Write-Error "Administrator rights are required to change the edition!"
+    return
+}
 
 function Get-AssemblyIdentity {
     param (
@@ -173,7 +177,7 @@ function Write-UpgradeXml {
 }
 
 function Write-Usage {
-    Get-Help $PSCommandPath -detailed
+    Get-Help $script:MyInvocation.MyCommand.Path -detailed
 }
 
 $version = '1.0'
@@ -195,7 +199,7 @@ https://github.com/Gamers-Against-Weed/Set-WindowsCbsEdition
 $removalCandidates = @();
 $installCandidates = @{};
 
-$packages = Get-ChildItem -Path 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Component Based Servicing\Packages' | select Name | where name -Match '^.*\\Microsoft-Windows-.*Edition~'
+$packages = Get-ChildItem -Path 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Component Based Servicing\Packages' | select Name | where { $_.name -match '^.*\\Microsoft-Windows-.*Edition~' }
 foreach($package in $packages) {
     $state = (Get-ItemProperty -Path "Registry::$($package.Name)").CurrentState
     $packageName = ($package.Name -split '\\')[-1]
@@ -206,12 +210,12 @@ foreach($package in $packages) {
             $installCandidates[$packageEdition] = @()
         }
 
-        if($false -eq ($packageName -in $installCandidates[$packageEdition])) {
+        if($false -eq ($installCandidates[$packageEdition] -contains $packageName)) {
             $installCandidates[$packageEdition] = $installCandidates[$packageEdition] + @($packageName)
         }
     }
 
-    if((($state -eq 0x50) -or ($state -eq 0x70)) -and ($false -eq ($packageName -in $removalCandidates))) {
+    if((($state -eq 0x50) -or ($state -eq 0x70)) -and ($false -eq ($removalCandidates -contains $packageName))) {
         $removalCandidates = $removalCandidates + @($packageName)
     }
 }
@@ -221,7 +225,7 @@ if($getTargetsParam) {
     Exit
 }
 
-if($false -eq ($SetEdition -in $installCandidates.Keys)) {
+if($false -eq ($installCandidates.Keys -contains $SetEdition)) {
     Write-Error "The system cannot be upgraded to `"$SetEdition`""
     Exit 1
 }
