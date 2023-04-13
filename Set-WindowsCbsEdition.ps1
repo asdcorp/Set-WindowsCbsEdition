@@ -246,12 +246,12 @@ Write-Host 'Starting the upgrade process. This may take a while...'
 DISM.EXE /English /NoRestart /Online /Apply-Unattend:$xmlPath
 $dismError = $LASTEXITCODE
 
-Remove-Item -Path $xmlPath -Force
-
 if(($dismError -ne 0) -and ($dismError -ne 3010)) {
     Write-Error 'Failed to upgrade to the target edition'
     Exit $dismError
 }
+
+Remove-Item -Path $xmlPath -Force
 
 if($null -ne $editionXml) {
     $destination = $Env:SystemRoot + '\' + $SetEdition + '.xml'
